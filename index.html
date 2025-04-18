@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Financial Data</title>
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;600&display=swap" rel="stylesheet">
+  <style>
+    *,
+    *:before,
+    *:after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: #080710;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .background {
+      width: 430px;
+      height: 520px;
+      position: absolute;
+      transform: translate(-50%, -50%);
+      left: 50%;
+      top: 50%;
+      z-index: -1;
+    }
+
+    .background .shape {
+      height: 200px;
+      width: 200px;
+      position: absolute;
+      border-radius: 50%;
+    }
+
+    .shape:first-child {
+      background: linear-gradient(#1845ad, #23a2f6);
+      left: -80px;
+      top: -80px;
+    }
+
+    .shape:last-child {
+      background: linear-gradient(to right, #ff512f, #f09819);
+      right: -30px;
+      bottom: -80px;
+    }
+
+    .form-container {
+      height: auto;
+      width: 500px;
+      background-color: rgba(255, 255, 255, 0.13);
+      position: absolute;
+      transform: translate(-50%, -50%);
+      top: 50%;
+      left: 50%;
+      border-radius: 10px;
+      backdrop-filter: blur(10px);
+      border: 2px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 0 40px rgba(8, 7, 16, 0.6);
+      padding: 40px 35px;
+      text-align: center;
+    }
+
+    .form-container * {
+      color: #ffffff;
+    }
+
+    .logo img {
+      max-height: 60px;
+      border-radius: 10px;
+    }
+
+    h2 {
+      font-size: 28px;
+      margin: 20px 0;
+    }
+
+    #companySearch {
+      padding: 12px 15px;
+      font-size: 16px;
+      width: 100%;
+      border-radius: 8px;
+      border: none;
+      background-color: rgba(255, 255, 255, 0.07);
+      color: #fff;
+      margin-bottom: 15px;
+    }
+
+    #companySearch::placeholder {
+      color: #e5e5e5;
+    }
+
+    #suggestions {
+      background-color: rgba(255, 255, 255, 0.2);
+      max-height: 150px;
+      overflow-y: auto;
+      border-radius: 6px;
+      margin-bottom: 20px;
+    }
+
+    .suggestion-item {
+      padding: 10px;
+      cursor: pointer;
+    }
+
+    .suggestion-item:hover {
+      background-color: rgba(255, 255, 255, 0.3);
+    }
+
+      label, select, input[type="number"] {
+      font-size: 16px;
+      margin-top: 20px;
+    }
+
+
+    select,
+    input[type="number"] {
+      padding: 10px;
+      border-radius: 6px;
+      border: none;
+      background-color: rgba(255, 255, 255, 0.07);
+      color: #fff;
+      width: 45%;
+      margin-bottom: 20px;
+    }
+
+button {
+  padding: 12px;
+  width: 100%;
+  font-size: 16px;
+  background-color: #ffffff;
+  color: #000000; /*  this ensures the text is black */
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+<button style="background-color: #ffffff; color: #000000;">Go</button>
+
+
+    button:hover {
+      background-color: #ddd;
+    }
+
+    #loading {
+      display: none;
+      margin-top: 20px;
+      font-size: 16px;
+      color: #eaeaea;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="background">
+    <div class="shape"></div>
+    <div class="shape"></div>
+  </div>
+
+  <div class="form-container">
+    <div class="logo">
+      <img src="https://img.freepik.com/free-photo/flat-lay-workstation-with-copy-space-laptop_23-2148430879.jpg" />
+    </div>
+
+    <h2>Company Search</h2>
+    <input id="companySearch" placeholder="Search company..." autocomplete="off" />
+    <div id="suggestions"></div>
+
+<div style="display: flex; justify-content: space-between;">
+  <div>
+    <label for="quarter">Quarter:</label><br />
+    <select id="quarter">
+      <option>Q1</option>
+      <option>Q2</option>
+      <option>Q3</option>
+      <option>Q4</option>
+    </select>
+  </div>
+  <div>
+    <label for="year">Year:</label><br />
+    <input id="year" type="number" placeholder="Year" value="2024" />
+  </div>
+</div>
+<p id="selectedQuarterText" style="text-align: left; font-size: 14px; margin-bottom: 20px;">Selected Quarter: Q1</p>
+   
+
+    <button onclick="handleGo()">Go</button>
+
+    <div id="loading">🔍 Searching data, please wait...</div>
+  </div>
+
+  <script>
+    const scriptURL = "https://script.google.com/macros/s/AKfycbxZ3OnF2FNylQ-tkp2W31RSnwF16gQeUmoV9ER4rHh2nkgOvtPjQDVDr2aulSMNplbqgw/exec";
+    let selectedCompany = null;
+
+    document.getElementById('companySearch').addEventListener('input', async function (e) {
+      const q = e.target.value;
+      if (!q) return;
+
+      const res = await fetch(`${scriptURL}?q=${q}`);
+      const data = await res.json();
+
+      const suggestionsDiv = document.getElementById('suggestions');
+      suggestionsDiv.innerHTML = "";
+      data.forEach(company => {
+        const div = document.createElement('div');
+        div.textContent = company.name;
+        div.className = 'suggestion-item';
+        div.onclick = () => {
+          selectedCompany = company;
+          document.getElementById('companySearch').value = company.name;
+          suggestionsDiv.innerHTML = "";
+        };
+        suggestionsDiv.appendChild(div);
+      });
+    });
+
+    function handleGo() {
+      const quarter = document.getElementById("quarter").value;
+      const year = document.getElementById("year").value;
+
+      if (!selectedCompany) {
+        alert("Please select a company from suggestions");
+        return;
+      }
+
+      fetch(scriptURL, {
+        method: "POST",
+        body: JSON.stringify({
+          companyName: selectedCompany.name,
+          companyId: selectedCompany.id,
+          quarter,
+          year
+        })
+      })
+      .then(res => res.text())
+      .then(link => {
+        if (link.startsWith("http")) {
+          window.open(link, "_blank");
+        } else {
+          alert(link);
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        alert("Something went wrong.");
+      });
+    }
+  </script>
+
+</body>
+</html>
